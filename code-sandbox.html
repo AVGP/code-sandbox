@@ -1,0 +1,132 @@
+<link rel="import" href="http://components.geekonaut.de/code-editor/code-editor.html">
+
+<template>
+    <style>
+        :host { display: block; }
+
+        #wrap {
+          display: flex;
+          flex: 1 auto;
+          justify-content: space-around;
+
+          height: 100%;
+          width: 100%;
+        }
+
+        code-editor, iframe {
+          display: inline-block;
+          height: 100%;
+          flex: 1 100%;
+          border: inset;
+        }
+    </style>
+    <div id="wrap">
+      <code-editor id="source"></code-editor>
+      <iframe id="preview"></iframe>
+    </div>
+</template>
+<script>
+  var CodeSandbox = undefined;
+  (function(currentScript) {
+
+    var updatePreview = function(preview, srcText, parser) {
+      if(parser) srcText = parser(srcText);
+      preview.document.open();
+      preview.document.write(srcText);
+      preview.document.close();
+    };
+
+    var elemPrototype = Object.create(HTMLDivElement.prototype);
+
+    Object.defineProperty(elemPrototype, "theme", {
+      get: function() { return this.editor.theme; },
+      set: function(theme) {
+        var self = this;
+        self.source.onReady(function() {
+          self.source.theme = theme;
+        });
+      }
+    });
+
+    Object.defineProperty(elemPrototype, "language", {
+      get: function() { return this.editor.mode; },
+      set: function(newLanguage) {
+        var self = this;
+        self.source.onReady(function() {
+          self.source.mode = newLanguage;
+        });
+      }
+    });
+
+    Object.defineProperty(elemPrototype, "parser", {
+      get: function() { return this.parseFunc; },
+      set: function(parseFunc) {
+        this.parseFunc = parseFunc;
+        var self = this;
+        self.source.onReady(function() {
+          console.log("txt:" + self.source.srcText);
+          updatePreview(self.preview, self.source.srcText, self.parseFunc);
+        });
+      }
+    });
+
+
+    Object.defineProperty(elemPrototype, "src", {
+      get: function() { return this.srcUrl; },
+      set: function(newSrcUrl) {
+        this.srcUrl = newSrcUrl;
+        var self = this;
+
+        var xhr = new XMLHttpRequest();
+        xhr.onload = function() {
+          var content = this.responseText;
+          self.source.onReady(function() {
+            self.source.srcText = content;
+          });
+          updatePreview(self.preview, content, self.parseFunc);
+        }
+        xhr.open('get', newSrcUrl, false);
+        xhr.send();
+      }
+    });
+
+    elemPrototype.createdCallback = function() {
+      var thisDoc = currentScript.ownerDocument;
+      this.root = this.createShadowRoot();
+      var tplContent = thisDoc.querySelector("template").content,
+          node       = document.importNode(tplContent, true);
+
+      this.root.appendChild(node);
+    };
+
+    elemPrototype.attachedCallback = function() {
+        var self = this;
+            previewElem = self.root.getElementById("preview");
+
+        self.source = self.root.getElementById("source");
+        self.preview = (previewElem.contentWindow) ? previewElem.contentWindow :
+                         (previewElem.contentDocument.document) ? previewElem.contentDocument.document :
+                           previewElem.contentDocument;
+        if(self.attributes.src) {
+          self.src = self.attributes.src.value;
+        }
+
+        if(self.attributes.theme) {
+          self.theme = self.attributes.theme.value;
+        }
+
+        if(self.attributes.language) {
+          self.language = self.attributes.language.value;
+        }
+
+        self.source.addEventListener('keyup', function(e) {
+          if(self.attributes.autoupdate && self.attributes.autoupdate.value.toLowerCase() === "no") {
+            if(e.keyCode != 13 || !e.shiftKey) return;
+          }
+          updatePreview(self.preview, self.source.srcText, self.parseFunc);
+        });
+    };
+
+    CodeSandbox = document.registerElement("code-sandbox", { prototype: elemPrototype });
+  }(document._currentScript || document.currentScript));
+</script>

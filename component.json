@@ -1,0 +1,10 @@
+{
+  "name": "code-sandbox",
+  "usage": "<code-sandbox language=\"javascript\" src=\"demo.js\"></code-sandbox>",
+  "description": "Interactive coding sandbox including a code editor and a live preview. Ideal for live demos and tutorials",
+  "links": {
+    "demo": "http://avgp.github.io/code-sandbox/index.html",
+    "repository": "https://github.com/avgp/code-sandbox",
+    "documentation": "https://github.com/AVGP/code-sandbox/blob/gh-pages/README.md"
+  }
+}
