@@ -64,7 +64,6 @@
         this.parseFunc = parseFunc;
         var self = this;
         self.source.onReady(function() {
-          console.log("txt:" + self.source.srcText);
           updatePreview(self.preview, self.source.srcText, self.parseFunc);
         });
       }
@@ -100,12 +99,12 @@
     };
 
     elemPrototype.attachedCallback = function() {
-        var self = this;
+        var self = this,
             previewElem = self.root.getElementById("preview");
 
         self.source = self.root.getElementById("source");
         self.preview = (previewElem.contentWindow) ? previewElem.contentWindow :
-                         (previewElem.contentDocument.document) ? previewElem.contentDocument.document :
+                         (previewElem.contentDocument) ? previewElem.contentDocument.document :
                            previewElem.contentDocument;
         if(self.attributes.src) {
           self.src = self.attributes.src.value;
